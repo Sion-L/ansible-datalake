@@ -1,0 +1,18 @@
+[Unit]
+Description=Flink TaskManager Service
+After=network.target
+
+[Service]
+Type=forking
+User=hadoop
+Group=hadoop
+Environment=JAVA_HOME=/home/hadoop/software/jdk1.8.0_162
+WorkingDirectory=/home/hadoop/software/flink-1.17.2
+Environment=HADOOP_CLASSPATH={{ hadoop_conf_dir }}:{{ hadoop_install_dir }}/share/hadoop/common/lib/*:{{ hadoop_install_dir }}/share/hadoop/common/*:{{ hadoop_install_dir }}/share/hadoop/hdfs:{{ hadoop_install_dir }}/share/hadoop/hdfs/lib/*:{{ hadoop_install_dir }}/share/hadoop/hdfs/*:{{ hadoop_install_dir }}/share/hadoop/mapreduce/lib/*:{{ hadoop_install_dir }}/share/hadoop/mapreduce/*:{{ hadoop_install_dir }}/share/hadoop/yarn:/home/hadoop/software/hadoop-3.1.2/share/hadoop/yarn/lib/*:{{ hadoop_install_dir }}/share/hadoop/yarn/*
+ExecStart={{ flink_install_dir }}/bin/taskmanager.sh start
+ExecStop={{ flink_install_dir }}/bin/taskmanager.sh stop
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

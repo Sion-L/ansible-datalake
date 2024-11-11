@@ -1,0 +1,7 @@
+- name: Clean Spark data
+  import_tasks: ../../common/tasks/execute.yml
+  vars:
+    commands:
+      - "rm -rf {{ spark_install_dir }}/* || true"
+  when: inventory_hostname in groups['hadoop']
+  tags: clean_spark

@@ -1,0 +1,56 @@
+- name: Grant Root
+  ansible.builtin.command:
+    cmd: >
+      {{ mysql_install_dir }}/bin/mysql -u root --password={{ mysql_root_password_new }} -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '{{ mysql_root_password_new }}' WITH GRANT OPTION; FLUSH PRIVILEGES;"
+  when: check_replica_user.stdout is not defined or check_replica_user.stdout | length == 0
+  tags: createAccount
+
+- name: Check if hadoop user exists
+  ansible.builtin.command:
+    cmd: >
+      {{ mysql_install_dir }}/bin/mysql -u root --password={{ mysql_root_password_new }} -e "SELECT User FROM mysql.user WHERE User='{{ mysql_hadoop_account }}';"
+  register: check_hadoop_user
+  ignore_errors: true
+  tags: createAccount
+
+- name: Create MySQL user hadoop
+  ansible.builtin.command:
+    cmd: >
+      {{ mysql_install_dir }}/bin/mysql -u root --password={{ mysql_root_password_new }} -e "CREATE USER '{{ mysql_hadoop_account }}'@'%' IDENTIFIED BY '{{ mysql_hadoop_account_password }}';"
+  when: check_hadoop_user.stdout is not defined or check_hadoop_user.stdout | length == 0    
+  tags: createAccount
+
+- name: Grant Mysql User for hadoop
+  ansible.builtin.command:
+    cmd: >
+      {{ mysql_install_dir }}/bin/mysql -u root --password={{ mysql_root_password_new }} -e "GRANT ALL PRIVILEGES ON *.* TO '{{ mysql_hadoop_account }}'@'%'; FLUSH PRIVILEGES;"
+  when: check_hadoop_user.stdout is not defined or check_hadoop_user.stdout | length == 0
+  tags: createAccount
+
+- name: Check if replication user exists
+  ansible.builtin.command:
+    cmd: >
+      {{ mysql_install_dir }}/bin/mysql -u root --password={{ mysql_root_password_new }} -e "SELECT User FROM mysql.user WHERE User='{{ mysql_replica_account }}';"
+  register: check_replica_user
+  ignore_errors: true      
+  tags: createAccount
+
+- name: Create Replication user
+  ansible.builtin.command:
+    cmd: >
+      {{ mysql_install_dir }}/bin/mysql -u root --password={{ mysql_root_password_new }} -e "CREATE USER '{{ mysql_replica_account }}'@'%' IDENTIFIED BY '{{ mysql_replica_account_password }}';"
+  when: check_replica_user.stdout is not defined or check_replica_user.stdout | length == 0    
+  tags: createAccount    
+
+- name: Grant Replication user
+  ansible.builtin.command:
+    cmd: >
+      {{ mysql_install_dir }}/bin/mysql -u root --password={{ mysql_root_password_new }} -e "GRANT replication slave ON *.* TO '{{ mysql_replica_account }}'@'%'; FLUSH PRIVILEGES;"
+  when: check_replica_user.stdout is not defined or check_replica_user.stdout | length == 0
+  tags: createAccount
+
+- name: debug
+  debug:
+    msg: "Check Replication User Output: {{ check_replica_user.stdout }}"
+  tags: createAccount
+

@@ -1,0 +1,16 @@
+[Unit]
+Description=Hadoop DataNode Service
+After=network.target
+
+[Service]
+Type=forking
+User=hadoop
+Group=hadoop
+ExecStart={{ hadoop_install_dir }}/sbin/hadoop-daemon.sh start datanode
+ExecStop={{ hadoop_install_dir }}/sbin/hadoop-daemon.sh stop datanode
+Restart=on-failure
+Environment=HADOOP_HOME={{ hadoop_install_dir }}
+Environment=JAVA_HOME={{ java_path }}
+
+[Install]
+WantedBy=multi-user.target

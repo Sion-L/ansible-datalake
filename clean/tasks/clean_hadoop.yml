@@ -1,0 +1,47 @@
+- name: Stop DataNode
+  import_tasks: ../../common/tasks/stop.yml
+  vars:
+    services:
+      - "datanode"
+  when: inventory_hostname in groups['hadoop'][1:]
+  tags: clean_hadoop
+
+- name: Stop Yarn
+  import_tasks: ../../common/tasks/stop.yml
+  vars:
+    services:
+      - "yarn"
+  when: inventory_hostname in [groups['hadoop'][0], groups['hadoop'][3]]
+  tags: clean_hadoop
+
+- name: Stop NodeManager
+  import_tasks: ../../common/tasks/stop.yml
+  vars:
+    services:
+      - "nodemanager"
+  when: inventory_hostname in groups['hadoop'][1:]
+  tags: clean_hadoop
+
+- name: Stop DFSZKFailoverController
+  import_tasks: ../../common/tasks/stop.yml
+  vars:
+    services:
+      - "zkfc"
+  when: inventory_hostname in [groups['hadoop'][0], groups['hadoop'][3]]
+  tags: clean_hadoop
+
+- name: Stop NameNode
+  import_tasks: ../../common/tasks/stop.yml
+  vars:
+    services:
+      - "namenode"
+  when: inventory_hostname in [groups['hadoop'][0], groups['hadoop'][3]]
+  tags: clean_hadoop
+
+- name: Clean Hadoop data
+  import_tasks: ../../common/tasks/execute.yml
+  vars:
+    commands:
+      - "rm -rf {{ hadoop_install_dir }}/* || true"
+  when: inventory_hostname in groups['hadoop']
+  tags: clean_hadoop

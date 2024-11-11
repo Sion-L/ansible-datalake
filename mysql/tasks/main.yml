@@ -1,0 +1,50 @@
+- include: user.yml
+
+- name: Create Mysql Work Dirs
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: mysql
+    group: mysql
+  with_items:
+    - "{{ mysql_install_dir }}"
+    - "{{ mysql_binlog_dir }}"
+    - "{{ mysql_slowlog_dir }}"
+    - "{{ mysql_data_dir }}"
+    - "{{ mysql_logs_dir }}"
+
+- name: Upload Mysql tar.gz file
+  include_tasks: ../../common/tasks/upload_files.yml
+  vars:
+    upload_files:
+      - { src: 'files/{{ mysql_tar_file }}', dest: '/opt/{{ mysql_tar_file }}' }
+
+- name: Extract Mysql
+  include_tasks: ../../common/tasks/unarchive.yml
+  vars:
+    extract_files:
+      - { src: '/opt/{{ mysql_tar_file }}', dest: '{{ mysql_install_dir }}' }
+
+- name: Copy Mysql Conf
+  include_tasks: ../../common/tasks/render_conf.yml
+  vars:
+    render_files:
+      - { src: 'my.cnf.j2', dest: '/etc/my.cnf' }
+      - { src: 'mysqld.service.j2', dest: '/etc/systemd/system/mysqld.service' }
+
+- name: Set Mysql Base Dir
+  ansible.builtin.file:
+    path: "{{ mysql_install_dir }}"
+    owner: mysql
+    group: mysql
+    recurse: yes
+    state: directory
+  with_items:
+    -  "{{ mysql_install_dir }}"
+    - "/etc/my.cnf"
+
+- include: install.yml
+- include: mysql_user.yml
+- include: replication.yml
+
+

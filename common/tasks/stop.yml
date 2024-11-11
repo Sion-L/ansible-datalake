@@ -1,0 +1,6 @@
+- name: Stop Service
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: stopped
+  with_items:
+    - "{{ services }}"

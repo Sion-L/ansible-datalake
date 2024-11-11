@@ -1,0 +1,9 @@
+export JAVA_HOME={{ java_path }}
+export HADOOP_HOME={{ hadoop_install_dir }}
+export HADOOP_CONF_DIR={{ hadoop_conf_dir }}
+export YARN_CONF_DIR={{ hadoop_conf_dir }}
+export SPARK_DIST_CLASSPATH="$HADOOP_HOME/etc/hadoop/*:$HADOOP_HOME/share/hadoop/common/lib/*:$HADOOP_HOME/share/hadoop/common/*:$HADOOP_HOME/share/hadoop/hdfs/*:$HADOOP_HOME/share/hadoop/hdfs/lib/*:$HADOOP_HOME/share/hadoop/yarn/lib/*:$HADOOP_HOME/share/hadoop/yarn/*:$HADOOP_HOME/share/hadoop/mapreduce/lib/*:$HADOOP_HOME/share/hadoop/mapreduce/*:$HADOOP_HOME/share/hadoop/tools/lib/*"
+
+SPARK_HISTORY_OPTS="-Dspark.history.ui.port=19091 -Dspark.history.fs.logDirectory=hdfs://datalake/logs -Dspark.history.retainedApplications=500"
+SPARK_MASTER_WEBUI_PORT=19090
+SPARK_DAEMON_JAVA_OPTS="-Dspark.deploy.recoveryMode=ZOOKEEPER -Dspark.deploy.zookeeper.url={% for host in groups['zookeeper'] %}{{ hostvars[host].datalake_host }}{% if not loop.last %},{% endif %}{% endfor %} -Dspark.deploy.zookeeper.dir=/sparkHA"

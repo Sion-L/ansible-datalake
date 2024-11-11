@@ -1,0 +1,8 @@
+export JAVA_HOME={{ java_path }}
+export HADOOP_PID_DIR={{ hadoop_pid_dir }}
+export HDFS_NAMENODE_USER="hadoop"
+export HDFS_DATANODE_USER="hadoop"
+export HDFS_ZKFC_USER="hadoop"
+export HDFS_JOURNALNODE_USER="hadoop"
+export HDFS_NAMENODE_OPTS="-Dhadoop.security.logger=INFO,RFAS -Xmx1024m"
+export HADOOP_OS_TYPE=${HADOOP_OS_TYPE:-$(uname -s)}

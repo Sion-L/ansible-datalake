@@ -1,0 +1,15 @@
+[Unit]
+Description=Spark Master
+After=network.target
+
+[Service]
+Type=forking
+User=hadoop
+Group=hadoop
+ExecStart={{ spark_install_dir }}/sbin/start-workers.sh
+ExecStop={{ spark_install_dir }}/sbin/stop-workers.sh
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+

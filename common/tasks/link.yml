@@ -1,0 +1,9 @@
+- name: Conf link
+  file:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: hadoop
+    group: hadoop
+    state: link
+    force: yes
+  loop: "{{ link_confs }}"

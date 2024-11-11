@@ -1,0 +1,23 @@
+- name: Stop Ranager
+  import_tasks: ../../common/tasks/execute.yml
+  vars:
+    commands:
+      - "ranger-admin stop"
+      - "ranger-usersync stop"
+  when: inventory_hostname == groups['hadoop'][0]
+  tags: clean_ranger
+
+- name: Stop Ranger Hive Plugin
+  shell: "cd {{ ranger_hive_dir }} && bash disable-hive-plugin.sh"
+  environment:
+    JAVA_HOME: "{{ java_path }}"
+  when: inventory_hostname == groups['hadoop'][0]
+  tags: clean_ranger
+
+- name: Clean Ranger data
+  import_tasks: ../../common/tasks/execute.yml
+  vars:
+    commands:
+      - "rm -rf {{ ranger_install_dir }}/* || true"
+  when: inventory_hostname in groups['hadoop']
+  tags: clean_ranger

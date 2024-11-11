@@ -1,0 +1,129 @@
+#################################################################
+# Global variable
+#################################################################
+# 大数据组件安装目录
+datalake_base_dir: "/home/hadoop/software"
+
+# mysql安装目录
+mysql_base_dir: "/home/mysql"
+
+# JAVA_HOME
+java_path: "{{ datalake_base_dir }}/jdk1.8.0_162"
+java_tar_file: "jdk-8u162-linux-x64.tar.gz"
+
+# mysql连接jar包
+mysql_conn_jar: "mysql-connector-java-5.1.35-bin.jar"
+
+
+#################################################################
+# Zookeeper variable
+#################################################################
+zookeeper_version: "3.6.3"
+zookeeper_tar_file: apache-zookeeper-{{ zookeeper_version }}-bin.tar.gz
+zookeeper_install_dir: "{{ datalake_base_dir }}/apache-zookeeper-{{ zookeeper_version }}"
+zookeeper_data_dir: "{{ zookeeper_install_dir }}/data"
+zookeeper_logs_dir: "{{ zookeeper_install_dir }}/logs"
+zookeeper_log_dir: "{{ zookeeper_install_dir }}/log"
+zookeeper_conf_file: "{{ zookeeper_install_dir }}/conf/zoo.cfg"
+zookeeper_myid_file: "{{ zookeeper_install_dir }}/data/myid"
+
+
+#################################################################
+# Hadoop variable
+#################################################################
+hadoop_version: "3.1.2"
+hadoop_tar_file: hadoop-{{ hadoop_version }}.tar.gz
+hadoop_install_dir: "{{ datalake_base_dir }}/hadoop-{{ hadoop_version }}"
+hadoop_tmp_dir: "{{ hadoop_install_dir }}/temp"
+hadoop_namenode_dir: "{{ hadoop_install_dir }}/namenode/data"
+hadoop_datanode_dir: "{{ hadoop_install_dir }}/datanode/data"
+hadoop_journalnode_dir: "{{ hadoop_install_dir }}/journalnode/data"
+hadoop_blacklist_file: "{{ hadoop_install_dir }}/etc/hadoop/blacklist"
+hadoop_conf_dir: "{{ hadoop_install_dir }}/etc/hadoop"
+hadoop_share_dir: "{{ hadoop_install_dir }}/share/hadoop"
+hadoop_pid_dir: "{{ hadoop_install_dir }}/pids"
+hadoop_logs_dir: "{{ hadoop_install_dir }}/logs"
+hadoop_secret_dir: "{{ hadoop_install_dir }}/secret"
+
+
+#################################################################
+# Mysql variable
+#################################################################
+mysql_version: "5.7.35"
+mysql_tar_file: "mysql-{{ mysql_version }}-linux-glibc2.12-x86_64.tar.gz"
+mysql_install_dir: "{{ mysql_base_dir }}/mysql-{{ mysql_version }}"
+mysql_binlog_dir: "{{ mysql_install_dir }}/binlog"
+mysql_slowlog_dir: "{{ mysql_install_dir }}/slowlog"
+mysql_data_dir: "{{ mysql_install_dir }}/data"
+mysql_logs_dir: "{{ mysql_install_dir }}/logs"
+mysql_binlog_file: "{{ mysql_install_dir }}/binlog/mysql-bin"
+mysql_slowlog_file: "{{ mysql_install_dir }}/slowlog/slow_query.log"
+mysql_root_password_new: "123457.ii"
+mysql_hadoop_account: "hadoop"
+mysql_hadoop_account_password: "123457.ii"
+mysql_replica_account: "replica"
+mysql_replica_account_password: "123457.ii"
+
+
+#################################################################
+# Hive variable
+#################################################################
+hive_version: "3.1.2"
+hive_tar_file: "apache-hive-{{ hive_version }}-bin.tar.gz"
+hive_install_dir: "{{ datalake_base_dir }}/hive-{{ hive_version }}"
+hive_conf_dir: "{{ hive_install_dir }}/conf"
+hive_tmp_dir: "{{ hive_install_dir }}/tmp"
+hive_scratch_dir: "{{ hive_install_dir }}/scratch"
+hive_warehouse_dir: "{{ hive_install_dir }}/warehouse"
+hive_querylog_dir: "{{ hive_install_dir }}/querylog"
+hive_oplog_dir: "{{ hive_install_dir }}/oplog"
+hive_logs_dir: "{{ hive_install_dir }}/logs"
+hive_download_dir: "{{ hive_install_dir }}/download"
+hive_lib_dir: "{{ hive_install_dir }}/lib"
+
+
+#################################################################
+# Spark variable
+#################################################################
+spark_version: "3.3.4"
+spark_tar_file: "spark-{{ spark_version }}-bin-hadoop3.tgz"
+spark_install_dir: "{{ datalake_base_dir }}/spark-{{ spark_version }}"
+spark_conf_dir: "{{  spark_install_dir }}/conf"
+spark_jar_dir: "{{ spark_install_dir }}/jars"
+
+
+#################################################################
+# Flink variable
+#################################################################
+flink_version: "1.17.2"
+flink_tar_file: "flink-{{ flink_version }}-bin-scala_2.12.tgz"
+flink_install_dir: "{{ datalake_base_dir }}/flink-{{ flink_version }}"
+flink_conf_dir: "{{ flink_install_dir }}/conf"
+
+
+#################################################################
+# Presto variable
+#################################################################
+presto_version: "0.286"
+presto_tar_file: "presto-server-{{ presto_version }}.tar.gz"
+presto_install_dir: "{{ datalake_base_dir }}/presto-server-{{ presto_version }}"
+presto_conf_dir: "{{ presto_install_dir }}/etc"
+presto_catalog_conf_dir: "{{ presto_install_dir }}/etc/catalog"
+presto_data_dir: "{{ presto_install_dir }}/data"
+presto_tmp_dir: "/tmp/presto/temp_storage"
+
+
+#################################################################
+# Ranger variable
+#################################################################
+ranger_version: "2.1.0"
+ranger_admin_tar_file: "ranger-{{ ranger_version }}-admin.tar.gz"
+ranger_usersync_tar_file: "ranger-{{ ranger_version }}-usersync.tar.gz"
+ranger_hive_tar_file: "ranger-{{ ranger_version }}-hive-plugin.tar.gz"
+ranger_install_dir: "{{ datalake_base_dir }}/ranger-{{ ranger_version }}"
+ranger_admin_dir: "{{ ranger_install_dir }}/ranger-admin"
+ranger_presto_dir: "{{ ranger_install_dir }}/ranger-presto"
+ranger_usersync_dir: "{{ ranger_install_dir }}/ranger-usersync"
+ranger_hive_dir: "{{ ranger_install_dir }}/ranger-hive"
+ranger_admin_password: "123457.ii"
+ranger_admin_conf_dir: "/etc/ranger/admin/conf"

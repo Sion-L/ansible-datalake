@@ -1,0 +1,170 @@
+#==============================================================================
+# Flink HA
+#==============================================================================
+high-availability: zookeeper
+high-availability.storageDir: hdfs://datalake/flink-datalake-standalone-ha/
+high-availability.zookeeper.quorum: {% for host in groups['zookeeper'] %}{{ hostvars[host].datalake_host }}:2181{% if not loop.last %},{% endif %}{% endfor %}
+
+high-availability.zookeeper.path.root: /flink-datalake-standalone-ha
+high-availability.cluster-id: /datalake-standalone-cluster
+
+
+#==============================================================================
+# Common
+#==============================================================================
+# 设置jar上传目录
+web.upload.dir: {{ flink_install_dir }}/jars
+
+# JobManager的rpc端口
+#jobmanager.rpc.port: 6123
+
+# 内存设置
+# JobManager的所有内存，包含Total Flink Memory、JVM Metaspace和JVM Overhead 可在作业中配置覆盖此参数
+jobmanager.memory.process.size: 2048m
+# TaskExecutors的所有内存，包含Total Flink Memory、JVM Metaspace和JVM Overhead 可在作业中配置覆盖此参数
+taskmanager.memory.process.size: 10240m
+
+# 每个TaskManager提供的任务slots数量大小（任务提交可再设置，优先级高于配置文件）
+taskmanager.numberOfTaskSlots: 5
+# flink默认并行度(一般情况下，如果的kafka，按照kafka分区数即可，p=slot*tm(每个tm的slot数等于vcpu))
+parallelism.default: 1
+
+# 任务失败重试次数(container失败之后的重试次数)
+yarn.application-attempts: 8
+
+# 超时设置
+# 网络延时大，调大此参数，默认10s
+akka.ask.timeout: 300s
+
+
+#==============================================================================
+# Fault tolerance and checkpointing
+#==============================================================================
+# 用于存储和检查点状态的存储类型：filesystem、rocksdb、hdfs
+state.backend: rocksdb
+# checkpoint目录
+state.checkpoints.dir: hdfs://datalake/flink/checkpoints
+# savepoint目录
+state.savepoints.dir: hdfs://datalake/flink/savepoints
+state.backend.incremental: true
+# 保留最近的检查点数量
+state.checkpoints.num-retained: 10
+
+# 重启策略(1.14.4)：none, off, disable、fixeddelay, fixed-delay、failurerate, failure-rate、exponentialdelay, exponential-delay
+restart-strategy: failure-rate
+# 连续两次重启尝试之间的延迟时间
+restart-strategy.failure-rate.delay: 10s
+# 固定时间间隔(不太明白，待测试)
+restart-strategy.failure-rate.failure-rate-interval: 5min
+# 固定时间间隔内允许的最大重启次数
+restart-strategy.failure-rate.max-failures-per-interval: 3
+# 以上含义难道是5分钟内，最大重启3次，两次连续重启间隔10秒
+
+# 恢复策略：region(默认)、full
+jobmanager.execution.failover-strategy: region
+
+# checkpoint策略
+# 触发checkpoint执行的间隔
+execution.checkpointing.interval: 3min
+# checkpoint保留策略：DELETE_ON_CANCELLATION：作业失败保留checkpoint，取消则删除、RETAIN_ON_CANCELLATION：作业失败或取消都保留checkpoint、NO_EXTERNALIZED_CHECKPOINTS：禁用
+execution.checkpointing.externalized-checkpoint-retention: DELETE_ON_CANCELLATION
+# 同时进行checkpoint的个数(checkpoint并发数)
+execution.checkpointing.max-concurrent-checkpoints: 1
+# 完成上次checkpoint到开始下次checkpoint的时间间隔，极端情况下，保证flink有处理数据的空闲时间
+execution.checkpointing.min-pause: 0
+# checkpoint模式：EXACTLY_ONCE：精准一次，AT_LEAST_ONCE：至少一次
+execution.checkpointing.mode: EXACTLY_ONCE
+# 单次进行checkpoint超时时间
+execution.checkpointing.timeout: 10min
+# 可允许checkpoint失败次数，0不允许任何checkpoint失败(增量肯定不允许)
+execution.checkpointing.tolerable-failed-checkpoints: 0
+# checkpoint barrier非对齐策略是否开启
+execution.checkpointing.unaligned: false
+
+#==============================================================================
+# Rest & web frontend
+#==============================================================================
+# 客户端连接的端口。如果未指定 rest.bind-port，则 REST 服务器将绑定到此端口。注意：仅当高可用性配置为 NONE 时才考虑此选项。==>暂不配置
+# standalone模式才有效，生产是flink on yarn
+#jobmanager.rpc.address: datalakemaster,datalakeslave02
+#jobmanager.bind-host: 0.0.0.0
+#rest.address: 0.0.0.0
+rest.bind-address: 0.0.0.0
+rest.bind-port: 8081
+
+#taskmanager.bind-host: 0.0.0.0
+#taskmanager.host: datalakemaster
+
+
+#==============================================================================
+# HistoryServer
+#==============================================================================
+# The HistoryServer is started and stopped via bin/historyserver.sh (start|stop)
+
+# Directory to upload completed jobs to. Add this directory to the list of
+# monitored directories of the HistoryServer as well (see below).
+# 
+jobmanager.archive.fs.dir: hdfs://datalake/flink/completed-jobs/
+
+# The address under which the web-based HistoryServer listens.
+#historyserver.web.address: 0.0.0.0
+
+# The port under which the web-based HistoryServer listens.
+# 基于Web的HistoryServer的端口号
+historyserver.web.port: 8082
+
+# Comma separated list of directories to monitor for completed jobs.
+# 逗号分隔的目录列表，用于从中获取归档作业
+historyserver.archive.fs.dir: hdfs://datalake/flink/completed-jobs/
+
+# Interval in milliseconds for refreshing the monitored directories.
+# 刷新存档的作业目录的时间间隔
+historyserver.archive.fs.refresh-interval: 10000
+
+#==============================================================================
+# Metric 监控
+#==============================================================================
+#metrics.reporters: prom
+#metrics.reporter.prom.class: org.apache.flink.metrics.prometheus.PrometheusReporter
+#metrics.reporter.prom.port: 19999
+
+#metrics.reporter.promgateway.class: org.apache.flink.metrics.prometheus.PrometheusPushGatewayReporter
+
+#metrics.reporter.promgateway.host: pushgateway.firecloud.wan
+
+#metrics.reporter.promgateway.port: 80
+
+#metrics.reporter.promgateway.jobName: myJob
+
+#metrics.reporter.promgateway.randomJobNameSuffix: true
+
+#metrics.reporter.promgateway.deleteOnShutdown: true
+
+#metrics.reporter.promgateway.groupingKey: env=pro;app=flink-app
+
+#metrics.reporter.promgateway.interval: 30 SECONDS
+
+#==============================================================================
+# Advanced Scheduling Options
+#==============================================================================
+# 启用插槽分散分配策略。此策略尝试将插槽平均分布在所有可用的TaskExecutors.
+cluster.evenly-spread-out-slots: true
+
+#==============================================================================
+# Web Error Records  Numeber
+#==============================================================================
+# 详细日志可在hadoop $HADOOP_HOME/logs/userlogs目录下对应的applicationId对应的容器中
+# 例如：/home/hadoop/software/hadoop-3.3.6/logs/userlogs/application_1673509848016_0001/container_1673509848016_0001_01_000009
+web.exception-history-size: 4000
+
+#==============================================================================
+# Advance
+#==============================================================================
+# 依赖类加载的优先级：parent-first:flink的lib目录加载、child-first：代码加载
+classloader.check-leaked-classloader: false
+classloader.resolve-order: parent-first
+#classloader.resolve-order: child-first
+
+
+#rest.flamegraph.enabled: true
+

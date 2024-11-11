@@ -1,0 +1,11 @@
+- name: Reload systemd to pick up service
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: Start Service
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: yes
+    state: started
+  with_items:
+    - "{{ services }}"

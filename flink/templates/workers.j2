@@ -1,0 +1,3 @@
+{% for host in groups['hadoop'][1:] %}
+{{ hostvars[host].datalake_host }}
+{% endfor %}

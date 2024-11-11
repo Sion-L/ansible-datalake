@@ -1,0 +1,15 @@
+- name: Stop Zookeeper
+  import_tasks: ../../common/tasks/stop.yml
+  vars:
+    services:
+      - "zookeeper"
+  when: inventory_hostname in groups['zookeeper']
+  tags: clean_zookeeper
+
+- name: Clean Zookeeper data
+  import_tasks: ../../common/tasks/execute.yml
+  vars:
+    commands:
+      - "rm -rf {{ zookeeper_install_dir }}/* || true"
+  when: inventory_hostname in groups['zookeeper']
+  tags: clean_zookeeper

@@ -1,0 +1,43 @@
+- name: Upload JDK tar.gz file
+  include_tasks: ../../common/tasks/upload_files.yml
+  vars:
+    upload_files:
+      - { src: 'files/{{ java_tar_file }}', dest: '/opt/{{ java_tar_file }}' }
+
+- name: Create Java Home
+  include_tasks: ../../common/tasks/create_dirs.yml
+  vars:
+    create_dirs:
+      - "{{ java_path }}"
+
+- name: Extract JDK to /opt directory
+  include_tasks: ../../common/tasks/unarchive.yml
+  vars:
+    extract_files:
+      - { src: '/opt/{{ java_tar_file }}', dest: '{{ java_path }}' }
+
+- name: Set Java_Home owner
+  include_tasks: ../../common/tasks/chown.yml
+  vars:
+    chown_dirs:
+      - "{{ java_path }}"
+
+- name: Set Java environment variables
+  lineinfile:
+    path: /etc/profile.d/java.sh
+    line: '{{ item }}'
+    state: present
+    create: yes
+  loop:
+    - 'export JAVA_HOME=/home/hadoop/software/jdk1.8.0_162'
+    - 'export JRE_HOME=${JAVA_HOME}/jre'
+    - 'export CLASSPATH=.:${JAVA_HOME}/lib:${JRE_HOME}/lib'
+    - 'export PATH=${JAVA_HOME}/bin:$PATH'
+
+- name: Make java.sh executable
+  file:
+    path: /etc/profile.d/java.sh
+    mode: '0755'
+
+- name: Invoke Java environment
+  shell: source /etc/profile

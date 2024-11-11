@@ -1,0 +1,8 @@
+{% set ranger_server = groups['hadoop'][0] %}
+POLICY_MGR_URL=http://{{ hostvars[ranger_server].datalake_host }}:6080
+REPOSITORY_NAME=prestopro
+COMPONENT_INSTALL_DIR_NAME={{ presto_install_dir }}
+XAAUDIT.SUMMARY.ENABLE=false
+XAAUDIT.SOLR.ENABLE=false
+CUSTOM_USER=hadoop
+CUSTOM_GROUP=hadoop

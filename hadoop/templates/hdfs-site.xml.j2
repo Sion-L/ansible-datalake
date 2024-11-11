@@ -1,0 +1,116 @@
+{% set nn00 = groups['hadoop'][0] %}
+{% set nn03 = groups['hadoop'][3] %}
+
+<configuration>
+    <property>
+        <name>dfs.replication</name>
+        <value>3</value>
+    </property>
+    <property>
+        <name>dfs.namenode.name.dir</name>
+        <value>file:{{ hadoop_namenode_dir }}</value>
+    </property>
+    <property>
+        <name>dfs.datanode.data.dir</name>
+        <value>file:{{ hadoop_datanode_dir }}</value>
+    </property>
+    <property>
+        <name>dfs.webhdfs.enabled</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>dfs.permissions.enabled</name>
+        <value>false</value>
+    </property>
+    <property>
+        <name>dfs.client.use.datanode.hostname</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>dfs.nameservices</name>
+        <value>datalake</value>
+    </property>
+    <property>
+        <name>dfs.ha.namenodes.datalake</name>
+        <value>nn00,nn03</value>
+    </property>
+    <property>
+        <name>dfs.namenode.rpc-address.datalake.nn00</name>
+        <value>{{ hostvars[nn00].datalake_host }}:9000</value>
+    </property>
+    <property>
+        <name>dfs.namenode.http-address.datalake.nn00</name>
+        <value>{{ hostvars[nn00].datalake_host }}:50070</value>
+    </property>
+
+    <property>
+        <name>dfs.namenode.rpc-address.datalake.nn03</name>
+        <value>{{ hostvars[nn03].datalake_host }}:9000</value>
+    </property>
+
+    <property>
+        <name>dfs.namenode.http-address.datalake.nn03</name>
+        <value>{{ hostvars[nn03].datalake_host }}:50070</value>
+    </property>
+
+    <property>
+        <name>dfs.namenode.shared.edits.dir</name>
+        <value>qjournal://{% for host in groups['hadoop'][1:] %}{{ hostvars[host].datalake_host }}:8485{% if not loop.last %};{% endif %}{% endfor %}/datalake</value>
+    </property>
+    <property>
+        <name>dfs.journalnode.edits.dir</name>
+        <value>{{ hadoop_journalnode_dir }}</value>
+    </property>
+    <property>
+        <name>dfs.ha.automatic-failover.enabled</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>dfs.client.failover.proxy.provider.datalake</name>
+        <value>org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider</value>
+    </property>
+    <property>
+        <name>dfs.ha.fencing.methods</name>
+        <value>sshfence</value>
+    </property>
+    <property>
+        <name>dfs.ha.fencing.ssh.private-key-files</name>
+        <value>/home/hadoop/.ssh/id_rsa</value>
+    </property>
+    <property>
+        <name>dfs.ha.fencing.ssh.connect-timeout</name>
+        <value>30000</value>
+    </property>
+    <property>
+        <name>dfs.hosts.exclude</name>
+        <value>{{ hadoop_blacklist_file }}</value>
+    </property>
+    <property>
+        <name>dfs.namenode.replication.max-streams</name>
+        <value>20</value>
+        <description>
+            Hard limit for the number of highest-priority replication streams.
+        </description>
+    </property>
+    <property>
+        <name>dfs.namenode.replication.max-streams-hard-limit</name>
+        <value>40</value>
+        <description>
+            Hard limit for all replication streams.
+        </description>
+    </property>
+    <property>
+        <name>dfs.namenode.replication.work.multiplier.per.iteration</name>
+        <value>20</value>
+        <description>
+            *Note*: Advanced property. Change with caution.
+            This determines the total amount of block transfers to begin in
+            parallel at a DN, for replication, when such a command list is being
+            sent over a DN heartbeat by the NN. The actual number is obtained by
+            multiplying this multiplier with the total number of live nodes in the
+            cluster. The result number is the number of blocks to begin transfers
+            immediately for, per DN heartbeat. This number can be any positive,
+            non-zero integer.
+        </description>
+    </property>
+</configuration>

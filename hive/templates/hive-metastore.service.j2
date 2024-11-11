@@ -1,0 +1,16 @@
+[Unit]
+Description=Hive Metastore Service
+After=network.target
+
+[Service]
+Type=simple
+User=hadoop
+Group=hadoop
+TimeoutStartSec=300
+Environment=HADOOP_HOME={{ hadoop_install_dir }}
+ExecStart={{ hive_install_dir }}/bin/hive --service metastore
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+

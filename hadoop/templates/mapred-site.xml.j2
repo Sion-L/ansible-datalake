@@ -1,0 +1,32 @@
+{% set master = groups['hadoop'][0] %}
+<configuration>
+    <property>
+        <name>mapreduce.framework.name</name>
+        <value>yarn</value>
+    </property>
+    <property>
+        <name>mapreduce.jobhistory.address</name>
+        <value>{{ hostvars[master].datalake_host }}:10020</value>
+    </property>
+    <property>
+        <name>mapreduce.jobhistory.webapp.address</name>
+        <value>{{ hostvars[master].datalake_host }}:19888</value>
+    </property>
+
+    <property>
+        <name>yarn.application.classpath</name>
+        <value>
+            {{ hadoop_conf_dir }},
+            {{ hadoop_share_dir }}/common/lib/*,
+            {{ hadoop_share_dir }}/common/*,
+            {{ hadoop_share_dir }}/hdfs,
+            {{ hadoop_share_dir }}/hdfs/lib/*,
+            {{ hadoop_share_dir }}/hdfs/*,
+            {{ hadoop_share_dir }}/mapreduce/lib/*,
+            {{ hadoop_share_dir }}/mapreduce/*,
+            {{ hadoop_share_dir }}/yarn,
+            {{ hadoop_share_dir }}/yarn/lib/*,
+            {{ hadoop_share_dir }}/yarn/*
+        </value>
+    </property>
+</configuration>

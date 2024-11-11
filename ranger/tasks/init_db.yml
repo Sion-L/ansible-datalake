@@ -1,0 +1,32 @@
+- name: Create Ranger Database
+  ansible.builtin.shell: |
+    {{ mysql_install_dir }}/bin/mysql -u {{ mysql_hadoop_account }} --password={{ mysql_hadoop_account_password }} -e "
+    DROP DATABASE IF EXISTS ranger;"
+  delegate_to: "{{ item }}"
+  when: mysql_replica_role == "master"
+  with_items: "{{ groups['mysql'] }}"
+  run_once: true
+
+- name: Stop Foreign Key Checks
+  ansible.builtin.shell: |
+    {{ mysql_install_dir }}/bin/mysql -u {{ mysql_hadoop_account }} --password={{ mysql_hadoop_account_password }} -e "
+    SET FOREIGN_KEY_CHECKS = 0;"
+  delegate_to: "{{ item }}"
+  when: mysql_replica_role == "master"
+  with_items: "{{ groups['mysql'] }}"
+  run_once: true
+
+- name: Execute setup.sh
+  shell: "cd {{ ranger_admin_dir }} && bash setup.sh"
+  environment:
+    JAVA_HOME: "{{ java_path }}"
+  when: inventory_hostname == groups['hadoop'][0]
+
+- name: Start Foreign Key Checks
+  ansible.builtin.shell: |
+    {{ mysql_install_dir }}/bin/mysql -u {{ mysql_hadoop_account }} --password={{ mysql_hadoop_account_password }} -e "
+    SET FOREIGN_KEY_CHECKS = 1;"
+  delegate_to: "{{ item }}"
+  when: mysql_replica_role == "master"
+  with_items: "{{ groups['mysql'] }}"
+  run_once: true

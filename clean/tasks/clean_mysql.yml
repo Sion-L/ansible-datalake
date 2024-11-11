@@ -1,0 +1,17 @@
+- name: Stop Mysql
+  import_tasks: ../../common/tasks/stop.yml
+  vars:
+    services:
+      - "mysqld"
+  when: inventory_hostname in groups['mysql']
+  tags: clean_mysql
+
+- name: Clean Mysql data
+  import_tasks: ../../common/tasks/execute.yml
+  vars:
+    commands:
+      - "rm -rf {{ mysql_install_dir }}/* || true"
+  when: inventory_hostname in groups['mysql']
+  tags: clean_mysql
+
+

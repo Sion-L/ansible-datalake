@@ -1,0 +1,103 @@
+- name: Upload Hive tar.gz file
+  include_tasks: ../../common/tasks/upload_files.yml
+  vars:
+    upload_files:
+      - { src: 'files/apache-hive-{{ hive_version }}-bin.tar.gz', dest: '/opt/apache-hive-{{ hive_version }}-bin.tar.gz' }
+
+- name: Create Hive Dirs
+  include_tasks: ../../common/tasks/create_dirs.yml
+  vars:
+    create_dirs:
+      - "{{ hive_install_dir }}"
+
+- name: Extract Hive tar.gz to {{ hive_install_dir }}
+  include_tasks: ../../common/tasks/unarchive.yml
+  vars:
+    extract_files:
+      - { src: '/opt/apache-hive-{{ hive_version }}-bin.tar.gz', dest: '{{ hive_install_dir }}' }
+
+- name: Set Hive Install Dir Owner
+  include_tasks: ../../common/tasks/chown.yml
+  vars:
+    chown_dirs:
+      - "{{ hive_install_dir }}"
+
+- name: Upload Hive Lib
+  include_tasks: ../../common/tasks/upload_files.yml
+  vars:
+    upload_files:
+      - { src: 'files/{{ mysql_conn_jar }}', dest: '{{ hive_lib_dir }}/{{ mysql_conn_jar }}' }
+
+- name: Create Hive Work Dirs
+  include_tasks: ../../common/tasks/create_dirs.yml
+  vars:
+    create_dirs:
+      - "{{ hive_tmp_dir }}"
+      - "{{ hive_scratch_dir }}"
+      - "{{ hive_warehouse_dir }}"
+      - "{{ hive_querylog_dir }}"
+      - "{{ hive_oplog_dir }}"
+      - "{{ hive_download_dir }}"
+
+- name: Create logs Dirs
+  file:
+    path: "{{ hive_logs_dir }}"
+    state: directory
+    owner: hadoop
+    group: hadoop
+    mode: '0775'
+
+- name: Render Hive conf
+  include_tasks: ../../common/tasks/render_conf.yml
+  vars:
+    render_files:
+      - { src: 'hive-site.xml.j2', dest: '{{ hive_conf_dir }}/hive-site.xml' }
+      - { src: 'log4j.properties.j2', dest: '{{ hive_conf_dir }}/log4j.properties' }
+      - { src: 'hive.sh.j2', dest: '/etc/profile.d/hive.sh', mode: '0755' }
+      - { src: 'hive-metastore.service.j2', dest: '/etc/systemd/system/hive-metastore.service' }
+      - { src: 'hive-server2.service.j2', dest: '/etc/systemd/system/hive-server2.service' }
+
+- name: Invoke Hive environment
+  include_tasks: ../../common/tasks/execute.yml
+  vars:
+    commands:
+      - "source /etc/profile"
+
+- include: create_db.yml
+
+- name: Init Data
+  shell: "{{ hive_install_dir }}/bin/schematool -initSchema -dbType mysql"
+  when: inventory_hostname == groups['hive'][0]
+  environment:
+    HADOOP_HOME: "{{ hadoop_install_dir }}"
+
+- name: Alter Hive table
+  ansible.builtin.shell: |
+    {{ mysql_install_dir }}/bin/mysql -u {{ mysql_hadoop_account }} --password={{ mysql_hadoop_account_password }} -e "
+    use hive;
+    alter table COLUMNS_V2 modify column COMMENT varchar(256) character set utf8;
+    alter table TABLE_PARAMS modify column PARAM_VALUE mediumtext character set utf8;
+    alter table PARTITION_PARAMS modify column PARAM_VALUE varchar(4000) character set utf8;
+    alter table PARTITION_KEYS modify column PKEY_COMMENT varchar(4000) character set utf8;
+    alter table INDEX_PARAMS modify column PARAM_VALUE varchar(4000) character set utf8;"
+  when: inventory_hostname == groups['hive'][0]
+
+- name: Link core-site.xml for hadoop
+  include_tasks: ../../common/tasks/link.yml
+  vars:
+    link_confs:
+      - { src: '{{ hadoop_conf_dir }}/core-site.xml', dest: '{{ hive_conf_dir }}/core-site.xml' }
+
+- name: Start Hive
+  include_tasks: ../../common/tasks/start.yml
+  vars:
+    services:
+      - "hive-metastore"
+      - "hive-server2"
+  when: inventory_hostname in groups['hive'][0]
+
+- name: Upload hive-default.xml
+  include_tasks: ../../common/tasks/upload_files.yml
+  vars:
+    upload_files:
+      - { src: 'files/hive-default.xml.template', dest: '{{ hive_conf_dir }}/hive-default.xml' }

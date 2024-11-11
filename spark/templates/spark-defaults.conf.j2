@@ -1,0 +1,15 @@
+{% set sparkmaster = groups['hadoop'][0] %}
+spark.master                     yarn
+deploy.mode                      cluster
+spark.eventLog.enabled           true
+spark.eventLog.dir               hdfs://datalake/spark/logs
+spark.serializer                 org.apache.spark.serializer.KryoSerializer
+spark.executor.memory            4g
+spark.executor.cores             1
+spark.driver.memory              512m
+spark.driver.cores               1
+spark.executor.extraJavaOptions  -XX:+PrintGCDetails -Dkey=value -Dnumbers="one two three"
+spark.yarn.populateHadoopClasspath true
+spark.yarn.jars                  hdfs://datalake/spark/jars/*
+spark.yarn.historyServer.address {{ hostvars[sparkmaster].datalake_host }}:19091
+spark.history.ui.port            19091

@@ -1,0 +1,18 @@
+- name: Initialization Mysql Data Dir
+  ansible.builtin.command:
+    cmd: "{{ mysql_install_dir }}/bin/mysqld --initialize --user=mysql --basedir={{ mysql_install_dir }} --datadir={{ mysql_data_dir }}"
+  args:
+    creates: "{{ mysql_data_dir }}/mysql"
+- name: Start Mysql
+  include_tasks: ../../common/tasks/start.yml
+  vars:
+    services:
+      - "mysqld"
+- name: Get Temporary Password
+  ansible.builtin.shell: "grep 'temporary password' {{ mysql_logs_dir }}/mysql.err | awk '{print $NF}'"
+  register: temp_root_password
+- name: Update Mysql Root Password
+  ansible.builtin.command:
+    cmd: >
+      {{ mysql_install_dir }}/bin/mysqladmin -u root --password={{ temp_root_password.stdout }} password {{ mysql_root_password_new }}
+  when: temp_root_password.stdout is defined

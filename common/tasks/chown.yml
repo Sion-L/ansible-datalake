@@ -1,0 +1,9 @@
+- name: Modify Dirs Owner
+  ansible.builtin.file:
+    path: "{{ item }}"
+    owner: hadoop
+    group: hadoop
+    recurse: yes
+    state: directory
+  with_items:
+    - "{{ chown_dirs }}"

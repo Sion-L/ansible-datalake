@@ -1,0 +1,50 @@
+- name: Upload Spark tar.gz file
+  include_tasks: ../../common/tasks/upload_files.yml
+  vars:
+    upload_files:
+      - { src: 'files/spark-{{ spark_version }}-bin-hadoop3.tgz', dest: '/opt/spark-{{ spark_version }}-bin-hadoop3.tgz' }
+
+- name: Create Spark Dirs
+  include_tasks: ../../common/tasks/create_dirs.yml
+  vars:
+    create_dirs:
+      - "{{ spark_install_dir }}"
+
+- name: Extract Spark tar.gz to "{{ spark_install_dir }}"
+  include_tasks: ../../common/tasks/unarchive.yml
+  vars:
+    extract_files:
+      - { src: '/opt/spark-{{ spark_version }}-bin-hadoop3.tgz', dest: '{{ spark_install_dir }}' }
+
+- name: Set Spark Install Dir Owner
+  include_tasks: ../../common/tasks/chown.yml
+  vars:
+    chown_dirs:
+      - "{{ spark_install_dir }}"
+
+- name: Render Spark xml conf
+  include_tasks: ../../common/tasks/render_conf.yml
+  vars:
+    render_files:
+    - { src: 'spark-defaults.conf.j2', dest: '{{ spark_conf_dir }}/spark-defaults.conf' }
+    - { src: 'spark-env.sh.j2', dest: '{{ spark_conf_dir }}/spark-env.sh' }
+    - { src: 'workers.j2', dest: '{{ spark_conf_dir }}/workers' }
+    - { src: 'spark.sh.j2', dest: '/etc/profile.d/spark.sh', mode: '0755' }
+
+- name: Invoke Spark environment
+  include_tasks: ../../common/tasks/execute.yml
+  vars:
+    commands:
+      - "source /etc/profile"
+      - "{{ hadoop_install_dir }}/bin/hdfs dfs -mkdir -p /spark/logs"
+      - "{{ hadoop_install_dir }}/bin/hdfs dfs -mkdir -p /logs"
+      - "{{ hadoop_install_dir }}/bin/hdfs dfs -mkdir -p /spark/jars"
+      - "{{ hadoop_install_dir }}/bin/hdfs dfs -mkdir -p /spark"
+      - "{{ hadoop_install_dir }}/bin/hdfs dfs -put -f {{ spark_install_dir }}/jars/* /spark/jars"
+  when: inventory_hostname == groups['hadoop'][0]
+
+- name: Copy ice jar
+  include_tasks: ../../common/tasks/upload_files.yml
+  vars:
+    upload_files:
+      - { src: 'files/iceberg-spark-runtime-3.3_2.12-1.4.3.jar', dest: '{{ spark_jar_dir }}/iceberg-spark-runtime-3.3_2.12-1.4.3.jar' }

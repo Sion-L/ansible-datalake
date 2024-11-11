@@ -1,0 +1,8 @@
+- name: Create Dirs
+  file: 
+    path: "{{ item }}"
+    state: directory 
+    owner: hadoop 
+    group: hadoop
+  with_items:
+    - "{{ create_dirs }}"

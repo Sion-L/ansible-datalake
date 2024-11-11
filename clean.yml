@@ -1,0 +1,7 @@
+- name: Install Presto
+  hosts: hadoop
+  become: yes
+  roles:
+    - clean
+
+# e: ansible-playbook -i hosts.ini clean.yml --tags clean_flink

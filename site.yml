@@ -1,0 +1,48 @@
+- name: Set Install Envionment
+  hosts: hadoop
+  become: yes  # 需要root权限
+  roles:
+    - init
+    - java
+
+- name: Install Mysql
+  hosts: mysql
+  become: yes
+  roles:
+    - mysql
+
+- name: Install Zookeeper
+  hosts: zookeeper
+  become: yes
+  roles:
+    - zookeeper
+
+- name: Install Hadoop
+  hosts: hadoop
+  become: yes
+  roles:
+    - hadoop
+
+- name: Install Hive
+  hosts: hive
+  become: yes
+  roles:
+    - hive
+
+- name: Install Spark
+  hosts: hadoop
+  become: yes
+  roles:
+    - spark
+
+- name: Install Flink
+  hosts: hadoop
+  become: yes
+  roles:
+    - flink
+
+- name: Install Presto
+  hosts: hadoop
+  become: yes
+  roles:
+    - presto

@@ -1,0 +1,61 @@
+- name: Upload Ranger tar.gz file
+  include_tasks: ../../common/tasks/upload_files.yml
+  vars:
+    upload_files:
+      - { src: 'files/ranger-{{ ranger_version }}-admin.tar.gz', dest: '/opt/ranger-{{ ranger_version }}-admin.tar.gz' }
+      - { src: 'files/ranger-{{ ranger_version }}-usersync.tar.gz', dest: '/opt/ranger-{{ ranger_version }}-usersync.tar.gz' }
+      - { src: 'files/ranger-{{ ranger_version }}-hive-plugin.tar.gz', dest: '/opt/ranger-{{ ranger_version }}-hive-plugin.tar.gz' }
+      - { src: 'files/ranger-{{ ranger_version }}-presto-plugin.tar.gz', dest: '/opt/ranger-{{ ranger_version }}-presto-plugin.tar.gz' }
+
+- name: Create Ranger Dirs
+  include_tasks: ../../common/tasks/create_dirs.yml
+  vars:
+    create_dirs:
+      - "{{ ranger_install_dir }}"
+      - "{{ ranger_admin_dir }}"
+      - "{{ ranger_usersync_dir }}"
+      - "{{ ranger_hive_dir }}"
+      - "{{ ranger_presto_dir }}"
+
+- name: Extract Ranger tar.gz to {{ ranger_install_dir }}
+  include_tasks: ../../common/tasks/unarchive.yml
+  vars:
+    extract_files:
+      - { src: '/opt/ranger-{{ ranger_version }}-admin.tar.gz', dest: '{{ ranger_admin_dir }}' }
+      - { src: '/opt/ranger-{{ ranger_version }}-usersync.tar.gz', dest: '{{ ranger_usersync_dir }}' }
+      - { src: '/opt/ranger-{{ ranger_version }}-hive-plugin.tar.gz', dest: '{{ ranger_hive_dir }}' }
+      - { src: '/opt/ranger-{{ ranger_version }}-presto-plugin.tar.gz', dest: '{{ ranger_presto_dir }}' }
+
+- name: Set Ranger Install Dir Owner
+  include_tasks: ../../common/tasks/chown.yml
+  vars:
+    chown_dirs:
+      - "{{ ranger_admin_dir }}"
+      - "{{ ranger_usersync_dir }}"
+      - "{{ ranger_hive_dir }}"
+      - "{{ ranger_presto_dir }}"
+
+- name: Render Ranger conf
+  include_tasks: ../../common/tasks/render_conf.yml
+  vars:
+    render_files:
+      - { src: 'install.properties.j2', dest: '{{ ranger_admin_dir }}/install.properties' }
+      - { src: 'usersync-install.properties.j2', dest: '{{ ranger_usersync_dir }}/install.properties' }
+      - { src: 'hive-install.properties.j2', dest: '{{ ranger_hive_dir }}/install.properties' }
+      - { src: 'presto-install.properties.j2', dest: '{{ ranger_presto_dir }}/install.properties' }
+
+- name: Copy mysql jar
+  include_tasks: ../../common/tasks/upload_files.yml
+  vars:
+    upload_files:
+      - { src: 'files/{{ mysql_conn_jar }}', dest: '{{ ranger_admin_dir }}/{{ mysql_conn_jar}}' }
+
+# 有问题 待验证
+- name: Hive conf link
+  include_tasks: ../../common/tasks/link.yml
+  vars:
+    link_confs:
+      - { src: '{{ hive_conf_dir }}', dest: '{{ ranger_hive_dir }}/conf'}
+
+- include: init_db.yml
+- include: start.yml

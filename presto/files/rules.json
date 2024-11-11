@@ -1,0 +1,14 @@
+{
+  "catalogs": [
+    {
+      "user": "presto",
+      "catalog": "iceberg",
+      "allow": "read-only"
+    },
+	{
+      "user": "hadoop",
+      "catalog": ".*",
+      "allow": "all"
+    }
+  ]
+}

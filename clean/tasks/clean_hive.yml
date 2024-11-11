@@ -1,0 +1,15 @@
+- name: Stop hive metastore
+  import_tasks: ../../common/tasks/stop.yml
+  vars:
+    services:
+      - "hive-metastore"
+      - "hive-server2"
+  when: inventory_hostname in groups['hive'][0]
+
+- name: Clean Hive data
+  import_tasks: ../../common/tasks/execute.yml
+  vars:
+    commands:
+      - "rm -rf {{ hive_install_dir }}/* || true"
+  when: inventory_hostname in groups['hadoop']
+  tags: clean_hive

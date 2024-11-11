@@ -1,0 +1,16 @@
+[Unit]
+Description=Hadoop DataNode Service
+After=network.target
+
+[Service]
+Type=forking
+User=hadoop
+Group=hadoop
+ExecStart={{ hadoop_install_dir }}/bin/yarn --daemon start nodemanager
+ExecStop={{ hadoop_install_dir }}/bin/yarn --daemon stop nodemanager
+Restart=on-failure
+Environment=HADOOP_HOME={{ hadoop_install_dir }}
+Environment=JAVA_HOME={{ java_path }}
+
+[Install]
+WantedBy=multi-user.target

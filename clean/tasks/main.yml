@@ -1,0 +1,8 @@
+- include: clean_flink.yml
+- include: clean_hadoop.yml
+- include: clean_hive.yml
+- include: clean_mysql.yml
+- include: clean_spark.yml
+- include: clean_zookeeper.yml
+- include: clean_presto.yml
+- include: clean_ranger.yml

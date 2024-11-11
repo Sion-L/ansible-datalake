@@ -1,0 +1,93 @@
+- name: Upload Presto tar.gz file
+  include_tasks: ../../common/tasks/upload_files.yml
+  vars:
+    upload_files:
+      - { src: 'files/presto-server-{{ presto_version }}.tar.gz', dest: '/opt/presto-server-{{ presto_version }}.tar.gz' }
+
+- name: Create Presto Dirs
+  include_tasks: ../../common/tasks/create_dirs.yml
+  vars:
+    create_dirs:
+      - "{{ presto_install_dir }}"
+
+- name: Extract Presto tar.gz to {{ presto_install_dir }}
+  include_tasks: ../../common/tasks/unarchive.yml
+  vars:
+    extract_files:
+      - { src: '/opt/presto-server-{{ presto_version }}.tar.gz', dest: '{{ presto_install_dir }}' }
+
+- name: Set Presto Install Dir Owner
+  include_tasks: ../../common/tasks/chown.yml
+  vars:
+    chown_dirs:
+      - "{{ presto_install_dir }}"
+
+- name: Create Presto Work Dirs
+  include_tasks: ../../common/tasks/create_dirs.yml
+  vars:
+    create_dirs:
+      - "{{ presto_conf_dir }}"
+      - "{{ presto_catalog_conf_dir }}"
+      - "{{ presto_data_dir }}"
+
+- name: Create Presto Temp Dir
+  file: path={{ presto_tmp_dir }} state=directory owner=hadoop group=hadoop mode='0775'
+
+- name: Render Presto conf
+  include_tasks: ../../common/tasks/render_conf.yml
+  vars:
+    render_files:
+      - { src: 'node.properties.j2', dest: '{{ presto_conf_dir }}/node.properties' }
+      - { src: 'hive.properties.j2', dest: '{{ presto_catalog_conf_dir }}/hive.properties' }
+      - { src: 'presto.sh.j2', dest: '/etc/profile.d/presto.sh', mode: '0755' }
+      - { src: 'presto.service.j2', dest: '/etc/systemd/system/presto.service' }
+      - { src: 'iceberg.properties.j2', dest: '{{ presto_catalog_conf_dir }}/iceberg.properties' }
+
+- name: Render Presto Coordinator conf
+  template:
+    src: "coordinator-config.properties.j2"
+    dest: "{{ presto_conf_dir }}/config.properties"
+    owner: hadoop
+    group: hadoop
+  when: inventory_hostname in groups['hadoop'][0]
+
+- name: Render Presto Worker conf
+  template:
+    src: "worker-config.properties.j2"
+    dest: "{{ presto_conf_dir }}/config.properties"
+    owner: hadoop
+    group: hadoop
+  when: inventory_hostname in groups['hadoop'][1:]
+
+- name: Create Jvm config
+  include_tasks: ../../common/tasks/upload_files.yml
+  vars:
+    upload_files:
+      - { src: 'files/log.properties', dest: '{{ presto_conf_dir }}/log.properties' }
+      - { src: 'files/iceberg.properties', dest: '{{ presto_conf_dir }}/iceberg.properties' }
+      - { src: 'files/jvm.config', dest: '{{ presto_conf_dir }}/jvm.config' }
+
+- name: Invoke Spark environment
+  include_tasks: ../../common/tasks/execute.yml
+  vars:
+    commands:
+      - "source /etc/profile"
+
+- name: link python env
+  include_tasks: ../../common/tasks/link.yml
+  vars:
+    link_confs:
+      - { src: '/usr/bin/python3', dest: '/usr/bin/python' }
+
+- name: Upload Presto Master rule Conf
+  include_tasks: ../../common/tasks/upload_files.yml
+  vars:
+    upload_files:
+      - { src: 'files/access-control.properties', dest: '{{ presto_conf_dir }}/access-control.properties' }
+      - { src: 'files/rules.json', dest: '{{ presto_conf_dir }}/rules.json' }
+
+- name: Start Presto
+  include_tasks: ../../common/tasks/start.yml
+  vars:
+    services:
+      - "presto"

@@ -1,0 +1,16 @@
+[Unit]
+Description=HiveServer2 Service
+After=network.target hive-metastore.service
+
+[Service]
+Type=simple
+User=hadoop
+Group=hadoop
+TimeoutStartSec=300
+Environment=HADOOP_HOME={{ hadoop_install_dir }}
+ExecStart={{ hive_install_dir }}/bin/hive --service hiveserver2
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+

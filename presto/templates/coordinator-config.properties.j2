@@ -1,0 +1,30 @@
+{% set coordinator_server = groups['hadoop'][0] %}
+coordinator=true
+node-scheduler.include-coordinator=true
+http-server.http.port=8880
+query.max-memory=18GB
+query.max-memory-per-node=2GB
+query.max-total-memory-per-node=4GB
+memory.heap-headroom-per-node=1.6GB
+
+experimental.reserved-pool-enabled=false
+query.low-memory-killer.policy=total-reservation
+
+exchange.http-client.request-timeout=10s
+exchange.client-threads=50
+exchange.http-client.idle-timeout = 10s
+task.concurrency=16
+task.max-worker-threads=64
+task.http-response-threads=100
+join-distribution-type=AUTOMATIC
+node-scheduler.max-splits-per-node=200
+query.max-stage-count=400
+
+query.max-execution-time=1200s
+#exchange.http-client.max-content-length=128MB
+#node-manager.http-client.max-content-length=64MB
+
+discovery-server.enabled=true
+discovery.uri=http://{{ hostvars[coordinator_server].datalake_host }}:8880
+offset-clause-enabled=true
+log.max-size=100MB

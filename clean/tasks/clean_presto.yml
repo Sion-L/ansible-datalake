@@ -1,0 +1,15 @@
+- name: Stop Presto
+  import_tasks: ../../common/tasks/stop.yml
+  vars:
+    services:
+      - "presto"
+  when: inventory_hostname in groups['hadoop']
+  tags: clean_presto
+ 
+- name: Clean Presto data
+  import_tasks: ../../common/tasks/stop.yml
+  vars:
+    commands:
+      - "rm -rf {{ presto_install_dir }}/* || true"
+  when: inventory_hostname in groups['hadoop']
+  tags: clean_presto

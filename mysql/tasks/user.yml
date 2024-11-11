@@ -1,0 +1,4 @@
+- name: Create Mysql Group
+  group: name=mysql state=present
+- name: Create Mysql User
+  user: name=mysql system=yes shell=/bin/bash home=/home/mysql group=mysql

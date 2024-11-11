@@ -1,0 +1,161 @@
+- name: Upload Hadoop tar.gz file
+  include_tasks: ../../common/tasks/upload_files.yml
+  vars:
+    upload_files:
+      - { src: 'files/{{ hadoop_tar_file }}', dest: '/opt/{{ hadoop_tar_file }}' }
+
+- name: Create Hadoop Install Dirs
+  include_tasks: ../../common/tasks/create_dirs.yml  
+  vars:
+    create_dirs:
+      - "{{ hadoop_install_dir }}"
+
+- name: Extract Hadoop tar.gz to {{ hadoop_install_dir }}
+  include_tasks: ../../common/tasks/unarchive.yml
+  vars:
+    extract_files:
+      - { src: '/opt/{{ hadoop_tar_file }}', dest: '{{ hadoop_install_dir }}' }
+
+- name: Set Hadoop Install Dir Owner
+  include_tasks: ../../common/tasks/chown.yml
+  vars:
+    chown_dirs:
+      - "{{ hadoop_install_dir }}"
+
+- name: Create Hadoop Work Dirs
+  include_tasks: ../../common/tasks/create_dirs.yml
+  vars:
+    create_dirs:
+      - "{{ hadoop_install_dir }}"
+      - "{{ hadoop_namenode_dir }}"
+      - "{{ hadoop_datanode_dir }}"
+      - "{{ hadoop_tmp_dir }}"
+      - "{{ hadoop_journalnode_dir }}"
+      - "{{ hadoop_pid_dir }}"
+      - "{{ hadoop_logs_dir }}"
+      - "{{ hadoop_secret_dir }}"
+
+- name: Create Hadoop BlackList File
+  include_tasks: ../../common/tasks/create_files.yml
+  vars:
+    create_files:
+      - "{{ hadoop_blacklist_file }}"
+
+- name: Render Hadoop conf
+  include_tasks: ../../common/tasks/render_conf.yml
+  vars:
+    render_files:
+      - { src: 'core-site.xml.j2', dest: '{{ hadoop_conf_dir }}/core-site.xml' }
+      - { src: 'hdfs-site.xml.j2', dest: '{{ hadoop_conf_dir }}/hdfs-site.xml' }
+      - { src: 'yarn-site.xml.j2', dest: '{{ hadoop_conf_dir }}/yarn-site.xml' }
+      - { src: 'mapred-site.xml.j2', dest: '{{ hadoop_conf_dir }}/mapred-site.xml' }
+      - { src: 'workers.j2', dest: '{{ hadoop_conf_dir }}/workers' }
+      - { src: 'hadoop-env.sh.j2', dest: '{{ hadoop_conf_dir }}/hadoop-env.sh' }
+      - { src: 'hadoop-profile.sh.j2', dest: '/etc/profile.d/hadoop.sh', mode: '0755' }
+      - { src: 'journalnode.service.j2', dest: '/etc/systemd/system/journalnode.service' }
+      - { src: 'namenode.service.j2', dest: '/etc/systemd/system/namenode.service' }
+      - { src: 'datanode.service.j2', dest: '/etc/systemd/system/datanode.service' }
+      - { src: 'yarn.service.j2', dest: '/etc/systemd/system/yarn.service' }
+      - { src: 'zkfc.service.j2', dest: '/etc/systemd/system/zkfc.service' }
+      - { src: 'nodemanager.service.j2', dest: '/etc/systemd/system/nodemanager.service' }
+
+- name: Invoke Hadoop environment
+  include_tasks: ../../common/tasks/execute.yml
+  vars:
+    commands:
+      - "source /etc/profile"
+
+- name: Create scheduler conf
+  include_tasks: ../../common/tasks/copy_files.yml
+  vars:
+    copy_files:
+      - { src: 'files/fair-scheduler.xml', dest: '{{ hadoop_conf_dir }}/fair-scheduler.xml' }
+      - { src: 'files/hadoop-http-auth-signature-secret', dest: '{{ hadoop_secret_dir }}/hadoop-http-auth-signature-secret' }
+
+- name: Delete contents of the NameNode storage directory
+  include_tasks: ../../common/tasks/execute.yml
+  vars:
+    commands:
+      - "rm -rf {{ hadoop_namenode_dir }}/* || true"
+      - "rm -rf {{ hadoop_journalnode_dir }}/* || true"
+      - "rm -rf {{ hadoop_datanode_dir }}/* || true"
+
+# 格式化前需要启动jurnalnode journalnode在后三台机器上
+- name: Start JournalNode Service
+  include_tasks: ../../common/tasks/start.yml
+  vars:
+    services:
+      - "journalnode"
+  when: inventory_hostname in groups['hadoop'][1:]
+
+# 格式化前确保服务是停止的 namenode在第一台和第四台机器上
+- name: Stop NameNode
+  include_tasks: ../../common/tasks/stop.yml
+  vars:
+    services:
+      - "namenode"
+  when: inventory_hostname in [groups['hadoop'][0], groups['hadoop'][3]]
+
+- name: Format nameNode and zk
+  include_tasks: ../../common/tasks/execute.yml
+  vars:
+    commands:
+      - "echo y | {{ hadoop_install_dir }}/bin/hdfs namenode -format"
+      - "echo y | {{ hadoop_install_dir }}/bin/hdfs zkfc -formatZK"
+  when: inventory_hostname == groups['hadoop'][0]
+
+# 启动Active Namenode
+- name: Start NameNode
+  include_tasks: ../../common/tasks/start.yml
+  vars:
+    services:
+      - "namenode"
+  when: inventory_hostname in groups['hadoop'][0]
+
+# 清空另一台namenode的元数据,并拷贝元数据目录到另一台namenode
+- name: Clear Standby NameNode Data
+  include_tasks: ../../common/tasks/execute.yml
+  vars:
+    commands:
+      - "rm -rf {{ hadoop_namenode_dir }}/* || true"
+      - "echo y | {{ hadoop_install_dir }}/bin/hdfs namenode -bootstrapStandby"
+  when: inventory_hostname == groups['hadoop'][3]
+
+# 启动standby namenode
+- name: Start Standby NameNode
+  include_tasks: ../../common/tasks/start.yml
+  vars:
+    services:
+      - "namenode"
+  when: inventory_hostname in groups['hadoop'][3]
+
+- name: Start DataNode
+  include_tasks: ../../common/tasks/start.yml
+  vars:
+    services:
+      - "datanode"
+  when: inventory_hostname in groups['hadoop'][1:]
+
+- name: Start Yarn
+  include_tasks: ../../common/tasks/start.yml
+  vars:
+    services:
+      - "yarn"
+  when: inventory_hostname in [groups['hadoop'][0], groups['hadoop'][3]]
+
+- name: Start NodeManager
+  include_tasks: ../../common/tasks/start.yml
+  vars:
+    services:
+      - "nodemanager"
+  when: inventory_hostname in groups['hadoop'][1:]
+
+- name: Start DFSZKFailoverController
+  include_tasks: ../../common/tasks/start.yml
+  vars:
+    services:
+      - "zkfc"
+  when: inventory_hostname in [groups['hadoop'][0], groups['hadoop'][3]] 
+
+
+  

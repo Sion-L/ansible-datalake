@@ -1,0 +1,86 @@
+- name: Stop firewalld service
+  systemd:
+    name: firewalld
+    state: stopped      
+- name: Disable firewalld service
+  systemd:
+    name: firewalld
+    enabled: no
+- name: Set SELinux Configuration
+  command: setenforce 0
+- name: Update SELinux Configuration to disabled
+  command: sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/selinux/config
+     
+- name: Create Hadoop Group
+  group: name=hadoop state=present
+- name: Create Hadoop User
+  user: name=hadoop system=yes shell=/bin/bash home=/home/hadoop group=hadoop
+- name: Create Software Dir
+  file: path=/home/hadoop/software state=directory owner=hadoop group=hadoop
+- name: Create Application Dir
+  file: path=/home/hadoop/app state=directory owner=hadoop group=hadoop
+- name: Set the Hostname
+  shell: hostnamectl set-hostname "{{ datalake_host }}" 
+  tags: test
+- name: Set facts for each host in the hadoop group
+  set_fact:
+    datalake_hosts: "{{ datalake_hosts | default([]) + [item] }}"
+  loop: "{{ groups['hadoop'] }}"
+
+- name: Add entries to /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ item }} {{ hostvars[item].datalake_host }}"
+    state: present
+  loop: "{{ datalake_hosts }}"    
+
+- name: Set Hadoop Sudo
+  lineinfile:
+    path: /etc/sudoers
+    line: 'hadoop        ALL=(ALL)       NOPASSWD: ALL'
+    validate: '/usr/sbin/visudo -cf %s'
+
+- name: Set timezone in profile
+  lineinfile:
+    path: /etc/profile.d/tz.sh
+    line: "export TZ='Asia/Shanghai'"
+    create: yes
+- name: Set Timezone
+  shell: |
+    rm -rf /etc/localtime &&
+    ln -sv /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &&
+    source /etc/profile
+
+- name: Set Chrony Conf
+  template:
+    src: chrony.conf.j2
+    dest: /etc/chrony.conf
+- name: Start Chrony Service
+  systemd:
+    name: chronyd
+    state: restarted
+    enabled: yes
+
+- name: Set soft nproc limit
+  lineinfile:
+    path: /etc/security/limits.conf
+    line: '* soft nproc 1000000'
+    state: present
+
+- name: Set hard nproc limit
+  lineinfile:
+    path: /etc/security/limits.conf
+    line: '* hard nproc 1000000'
+    state: present
+
+- name: Set soft nofile limit
+  lineinfile:
+    path: /etc/security/limits.conf
+    line: '* soft nofile 1000000'
+    state: present
+
+- name: Set hard nofile limit
+  lineinfile:
+    path: /etc/security/limits.conf
+    line: '* hard nofile 1000000'
+    state: present

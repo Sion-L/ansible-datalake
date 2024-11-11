@@ -1,0 +1,4 @@
+{% set hive_server = groups['hive'][0] %}
+connector.name=iceberg
+hive.metastore.uri=thrift://{{ hostvars[hive_server].datalake_host }}:9083
+iceberg.catalog.type=hive

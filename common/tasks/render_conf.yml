@@ -1,0 +1,8 @@
+- name: Render conf
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: hadoop
+    group: hadoop
+    mode: "{{ item.mode | default(omit) }}"
+  loop: "{{ render_files }}"

@@ -1,0 +1,42 @@
+- name: Execute set_globals.sh for admin
+  shell: "cd {{ ranger_admin_dir }} && bash set_globals.sh"
+  environment:
+    JAVA_HOME: "{{ java_path }}"
+  when: inventory_hostname == groups['hadoop'][0]  
+      
+- name: Render ranger admin conf
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: hadoop
+    group: hadoop
+  loop:
+    - { src: 'ranger-admin-site.xml.j2', dest: '{{ ranger_admin_conf_dir }}/ranger-admin-site.xml' }
+  when: inventory_hostname == groups['hadoop'][0]
+
+- name: Start Ranger Admin
+  shell: ranger-admin start 
+  when: inventory_hostname == groups['hadoop'][0]
+
+- name: Execute setup.sh for usersync
+  shell: "cd {{ ranger_usersync_dir }} && bash setup.sh"
+  environment:
+    JAVA_HOME: "{{ java_path }}"
+  when: inventory_hostname == groups['hadoop'][0]
+
+- name: Start Ranger Usersync
+  shell: ranger-usersync start
+  when: inventory_hostname == groups['hadoop'][0]
+
+- name: Start Ranger Hive Plugin
+  shell: "cd {{ ranger_hive_dir }} && bash enable-hive-plugin.sh"
+  environment:
+    JAVA_HOME: "{{ java_path }}"
+  when: inventory_hostname == groups['hadoop'][0]
+
+    # 弃用
+    #- name: Start Ranger Presto Plugin
+    #shell: "cd {{ ranger_presto_dir }} && bash enable-presto-plugin.sh"
+    #environment:
+    #JAVA_HOME: "{{ java_path }}"
+    #when: inventory_hostname == groups['hadoop'][0]

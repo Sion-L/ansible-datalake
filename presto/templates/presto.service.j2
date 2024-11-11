@@ -1,0 +1,16 @@
+[Unit]
+Description=Presto
+After=network.target
+
+[Service]
+Type=simple
+User=hadoop
+Group=hadoop
+Environment=PATH={{ java_path }}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin
+ExecStart={{ presto_install_dir }}/bin/launcher run
+ExecStop=/bin/kill -s TERM $MAINPID
+Restart=on-failure
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

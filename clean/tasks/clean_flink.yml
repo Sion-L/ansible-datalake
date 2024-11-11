@@ -1,0 +1,23 @@
+- name: Stop Flink Jobmanager
+  import_tasks: ../../common/tasks/stop.yml
+  vars:
+    services:
+      - "jobmanager"
+  when: inventory_hostname in [groups['hadoop'][0], groups['hadoop'][2]]
+  tags: clean_flink
+
+- name: Stop Flink Taskmanager
+  import_tasks: ../../common/tasks/stop.yml
+  vars:
+    services:
+      - "taskmanager"
+  when: inventory_hostname in groups['hadoop'][1:]
+  tags: clean_flink
+
+- name: Clean Flink data
+  import_tasks: ../../common/tasks/execute.yml
+  vars:
+    commands:
+      - "rm -rf {{ flink_install_dir }}/* || true"
+  when: inventory_hostname in groups['hadoop']
+  tags: clean_flink

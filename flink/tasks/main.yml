@@ -1,0 +1,91 @@
+- name: Upload Flink tar.gz file
+  include_tasks: ../../common/tasks/upload_files.yml
+  vars:
+    upload_files:
+      - { src: 'files/flink-{{ flink_version }}-bin-scala_2.12.tgz', dest: '/opt/flink-{{ flink_version }}-bin-scala_2.12.tgz' }
+
+- name: Create Flink Dirs
+  include_tasks: ../../common/tasks/create_dirs.yml
+  vars:
+    create_dirs:
+      - "{{ flink_install_dir }}"
+
+- name: Extract Flink tar.gz to {{ flink_install_dir }}
+  include_tasks: ../../common/tasks/unarchive.yml
+  vars:
+    extract_files:
+      - { src: '/opt/flink-{{ flink_version }}-bin-scala_2.12.tgz', dest: '{{ flink_install_dir }}' }
+
+- name: Render Flink conf
+  include_tasks: ../../common/tasks/render_conf.yml
+  vars:
+    render_files:
+      - { src: 'flink-conf.yaml.j2', dest: '{{ flink_conf_dir }}/flink-conf.yaml' }
+      - { src: 'masters.j2', dest: '{{ flink_conf_dir }}/masters' }
+      - { src: 'workers.j2', dest: '{{ flink_conf_dir }}/workers' }
+
+- name: Render Jobmanager service file
+  include_tasks: ../../common/tasks/render_conf.yml
+  vars:
+    render_files:
+      - { src: 'jobmanager.service.j2', dest: '/etc/systemd/system/jobmanager.service' }
+  when: inventory_hostname in [groups['hadoop'][0], groups['hadoop'][2]]
+
+- name: Render Taskmanager service file
+  include_tasks: ../../common/tasks/render_conf.yml
+  vars:
+    render_files:
+      - { src: 'taskmanager.service.j2', dest: '/etc/systemd/system/taskmanager.service' }
+  when: inventory_hostname in groups['hadoop'][1:]
+
+- name: Copy Hadoop core-site.yml to flink
+  include_tasks: ../../common/tasks/link.yml
+  vars:
+    link_confs:
+      - { src: '{{ hadoop_conf_dir }}/core-site.xml', dest: '{{ flink_conf_dir }}/core-site.xml' }
+
+- name: Set Flink Install Dir Owner
+  include_tasks: ../../common/tasks/chown.yml
+  vars:
+    chown_dirs:
+      - "{{ flink_install_dir }}"
+
+- name: Upload jar to hdfs
+  include_tasks: ../../common/tasks/execute.yml
+  vars:
+    commands:
+      - "{{ hadoop_install_dir }}/bin/hdfs dfs -mkdir -p /spark/logs"
+      - "{{ hadoop_install_dir }}/bin/hdfs dfs -put -f {{ spark_install_dir }}/jars/* /spark/jars"
+      - "{{ hadoop_install_dir }}/bin/hdfs dfs -mkdir -p /flink-datalake-standalone-ha"
+  when: inventory_hostname == groups['hadoop'][0]
+
+    #- name: Start flink Jobmanager
+    #environment:
+    #JAVA_HOME: "{{ java_path }}"
+    #expect:
+    #command: "/home/hadoop/software/flink-1.17.2/bin/stop-cluster.sh"
+    #responses:
+    # "Are you sure you want to continue connecting (yes/no/[fingerprint])": "yes"
+    #  "Are you sure you want to continue connecting (yes/no)": "yes"
+    # "Do you want to proceed with the operation? (yes/no)": "yes"
+    #  "Confirm your choice (yes/no)": "yes"
+    #when: inventory_hostname == groups['hadoop'][0]
+
+- name: Start flink Jobmanager
+  include_tasks: ../../common/tasks/start.yml
+  vars:
+    services:
+      - "jobmanager"
+  when: inventory_hostname in [groups['hadoop'][0], groups['hadoop'][2]]
+
+- name: Start flink Taskmanager
+  include_tasks: ../../common/tasks/start.yml
+  vars:
+    services:
+      - "taskmanager"
+  when: inventory_hostname in groups['hadoop'][1:]
+
+    #- name: Start flink sql client
+    #environment:
+    #JAVA_HOME: "{{ java_path }}"
+    #shell: "yes | bash {{ flink_install_dir }}/bin/sql-client.sh embedded"

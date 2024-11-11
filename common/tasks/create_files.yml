@@ -1,0 +1,8 @@
+- name: Create File
+  file: 
+    path: "{{ item }}"
+    state: touch
+    owner: hadoop 
+    group: hadoop
+  with_items:
+    - "{{ create_files }}"

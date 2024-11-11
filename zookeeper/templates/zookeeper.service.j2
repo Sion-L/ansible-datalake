@@ -1,0 +1,18 @@
+[Unit]
+Description=Zookeeper Service
+Documentation=https://zookeeper.apache.org
+After=network.target
+
+[Service]
+Type=forking
+User=hadoop
+Group=hadoop
+Environment=ZOO_LOG_DIR={{ zookeeper_logs_dir }}
+Environment=PATH={{ java_path }}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin
+ExecStart={{ zookeeper_install_dir }}/bin/zkServer.sh start {{ zookeeper_conf_file }}
+ExecStop={{ zookeeper_install_dir }}/bin/zkServer.sh stop {{ zookeeper_conf_file }}
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
