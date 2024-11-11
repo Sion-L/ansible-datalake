@@ -18,14 +18,11 @@
 
 
 ### Quest
-1. 各服务器必须同步时间 分布式系统对这块敏感 不同步可能造成数据不一致和影响分布式系统故障处理
-2. 除了做root用户免密之外还要做hadoop用户的免密,因为hadoop集群会使用sshfence远程的方式解脑裂问题（NameNode GC回收时） namenode两个节点要互相免密
-3. ansible有个bug,如果主机组中包含控制机自身,控制自身执行命令的话需要在hosts.ini中设置ansible_host
+1. 除了做root用户免密之外还要做hadoop用户的免密,因为hadoop集群会使用sshfence远程的方式解脑裂问题（NameNode GC回收时） namenode两个节点要互相免密
 
 ### Note
-1. spark 使用spark on yarn模式部署,不需要启动master和workers,只需要修改好对应的配置且保证nodemanager正常运行即可
-2. presto catalog需要连接hive的metastore,metastore的mysql配置在datalake01和datalake02上对应的应该是主从的地址,这样切换的时候直接修改catalog的连接换成另一个metastore就行,前提是将另一台hive metastore启动起来 (metastore不知道能不能配置连接从库,验证过好像没问题)
-3. 编译ranger的麒麟插件报错需要修改/root/.m2/repository/org/apache/kylin/kylin/2.6.4/kylin-2.6.4.pom中的<calcite.version>1.16.0-kylin-r2</calcite.version>为<calcite.version>1.16.0</calcite.version>
+1. spark 使用spark on yarn模式部署,不需要启动master和workers
+2. 编译ranger的麒麟插件报错需要修改/root/.m2/repository/org/apache/kylin/kylin/2.6.4/kylin-2.6.4.pom中的<calcite.version>1.16.0-kylin-r2</calcite.version>为<calcite.version>1.16.0</calcite.version>
 
 ### 后续补充
 1. presto新增iceberg配置
