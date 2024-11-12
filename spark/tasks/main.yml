@@ -41,6 +41,7 @@
       - "{{ hadoop_install_dir }}/bin/hdfs dfs -mkdir -p /spark/jars"
       - "{{ hadoop_install_dir }}/bin/hdfs dfs -mkdir -p /spark"
       - "{{ hadoop_install_dir }}/bin/hdfs dfs -put -f {{ spark_install_dir }}/jars/* /spark/jars"
+      - "{{ hadoop_install_dir }}/bin/hdfs dfs -mkdir -p /spark/stage /spark/task /spark/conf"
   when: inventory_hostname == groups['hadoop'][0]
 
 - name: Copy ice jar
