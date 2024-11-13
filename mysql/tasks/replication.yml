@@ -4,7 +4,6 @@
       {{ mysql_install_dir }}/bin/mysql -u root --password={{ mysql_root_password_new }} -e "SHOW MASTER STATUS;"
   register: master_status
   when: mysql_replica_role == "master"
-  tags: slave
 
 - name: Check if master_status has valid output
   ansible.builtin.fail:
@@ -15,18 +14,15 @@
   debug:
     msg: "Master status: {{ master_status }}"
   when: mysql_replica_role == "master"
-  tags: slave
 
 - name: Configure Slave to replicate from Master
   ansible.builtin.command:
     cmd: >
       {{ mysql_install_dir }}/bin/mysql -u root --password={{ mysql_root_password_new }} -e "CHANGE MASTER TO MASTER_HOST='{{ hostvars[groups['mysql'][0]].ansible_host }}', MASTER_USER='{{ mysql_replica_account }}', MASTER_PASSWORD='{{ mysql_replica_account_password }}', MASTER_LOG_FILE='{{ hostvars[groups['mysql'][0]].master_status.stdout_lines[1].split()[0] }}', MASTER_LOG_POS={{ hostvars[groups['mysql'][0]].master_status.stdout_lines[1].split()[1] }};"
   when: mysql_replica_role == "slave" and (hostvars[groups['mysql'][0]].master_status is defined and hostvars[groups['mysql'][0]].master_status.stdout_lines | length > 1)
-  tags: slave
 
 - name: Start Slave
   ansible.builtin.command:
     cmd: >
       {{ mysql_install_dir }}/bin/mysql -u root --password={{ mysql_root_password_new }} -e "START SLAVE;"
   when: mysql_replica_role == "slave"
-  tags: slave
