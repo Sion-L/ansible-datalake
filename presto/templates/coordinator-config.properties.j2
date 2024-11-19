@@ -1,6 +1,6 @@
 {% set coordinator_server = groups['hadoop'][0] %}
 coordinator=true
-node-scheduler.include-coordinator=true
+node-scheduler.include-coordinator=false
 http-server.http.port=8880
 query.max-memory=18GB
 query.max-memory-per-node=2GB
