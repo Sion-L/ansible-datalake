@@ -64,7 +64,6 @@
   vars:
     upload_files:
       - { src: 'files/log.properties', dest: '{{ presto_conf_dir }}/log.properties' }
-      - { src: 'files/iceberg.properties', dest: '{{ presto_conf_dir }}/iceberg.properties' }
       - { src: 'files/jvm.config', dest: '{{ presto_conf_dir }}/jvm.config' }
 
 - name: Invoke Spark environment
