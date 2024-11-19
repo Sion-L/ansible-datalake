@@ -7,7 +7,7 @@
   tags: clean_presto
  
 - name: Clean Presto data
-  import_tasks: ../../common/tasks/stop.yml
+  import_tasks: ../../common/tasks/execute.yml 
   vars:
     commands:
       - "rm -rf {{ presto_install_dir }}/* || true"
