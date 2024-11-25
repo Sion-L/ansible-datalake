@@ -20,12 +20,12 @@ web.upload.dir: {{ flink_install_dir }}/jars
 
 # 内存设置
 # JobManager的所有内存，包含Total Flink Memory、JVM Metaspace和JVM Overhead 可在作业中配置覆盖此参数
-jobmanager.memory.process.size: 2048m
+jobmanager.memory.process.size: 4096m
 # TaskExecutors的所有内存，包含Total Flink Memory、JVM Metaspace和JVM Overhead 可在作业中配置覆盖此参数
-taskmanager.memory.process.size: 10240m
+taskmanager.memory.process.size: 16384m
 
 # 每个TaskManager提供的任务slots数量大小（任务提交可再设置，优先级高于配置文件）
-taskmanager.numberOfTaskSlots: 5
+taskmanager.numberOfTaskSlots: 8
 # flink默认并行度(一般情况下，如果的kafka，按照kafka分区数即可，p=slot*tm(每个tm的slot数等于vcpu))
 parallelism.default: 1
 

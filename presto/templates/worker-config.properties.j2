@@ -24,4 +24,5 @@ query.max-execution-time=1200s
 #node-manager.http-client.max-content-length=64MB
 discovery.uri=http://{{ hostvars[coordinator_server].datalake_host }}:8880
 offset-clause-enabled=true
-log.max-size=100MB
+http-server.log.max-history=5
+http-server.log.max-size=100MB

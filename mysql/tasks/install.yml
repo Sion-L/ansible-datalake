@@ -1,5 +1,5 @@
 - name: Initialization Mysql Data Dir
-  ansible.builtin.command:
+  command:
     cmd: "{{ mysql_install_dir }}/bin/mysqld --initialize --user=mysql --basedir={{ mysql_install_dir }} --datadir={{ mysql_data_dir }}"
   args:
     creates: "{{ mysql_data_dir }}/mysql"
@@ -9,10 +9,16 @@
     services:
       - "mysqld"
 - name: Get Temporary Password
-  ansible.builtin.shell: "grep 'temporary password' {{ mysql_logs_dir }}/mysql.err | awk '{print $NF}'"
+  shell: "grep 'temporary password' {{ mysql_logs_dir }}/mysql.err | awk '{print $NF}'"
   register: temp_root_password
+- name: Check if MySQL socket file exists
+  stat:
+    path: /tmp/mysql.sock
+  register: mysql_socket_status
 - name: Update Mysql Root Password
-  ansible.builtin.command:
+  command:
     cmd: >
       {{ mysql_install_dir }}/bin/mysqladmin -u root --password={{ temp_root_password.stdout }} password {{ mysql_root_password_new }}
-  when: temp_root_password.stdout is defined
+  when:
+    - temp_root_password.stdout is defined
+    - mysql_socket_status.stat.exists
